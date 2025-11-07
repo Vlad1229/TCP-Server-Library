@@ -62,7 +62,7 @@ int config_tcp_server_handler(param_t* param, ser_buff_t* ser_buff, op_mode enab
 
     char ip[INET_ADDRSTRLEN];
 
-	bool local_skipped = true;
+	bool local_skipped = false;
     for (ifa = ifaddr; ifa != nullptr; ifa = ifa->ifa_next) {
         if (!ifa->ifa_addr) continue;
 
@@ -75,6 +75,7 @@ int config_tcp_server_handler(param_t* param, ser_buff_t* ser_buff, op_mode enab
 
             void *addr = &((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
             inet_ntop(AF_INET, addr, ip, sizeof(ip));
+            break;
         }
     }
     char* ip_addr = ip;
