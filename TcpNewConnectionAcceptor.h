@@ -20,7 +20,7 @@ private:
 	void TcpListenForNewConnection(uint32_t ip_addr, uint16_t port_no);
 
 public:
-    std::function<void(uint32_t, uint16_t, int)> client_connected;
+    std::function<void(uint32_t, uint16_t, int)> on_client_connected;
 
 private:
 	int accept_fd;

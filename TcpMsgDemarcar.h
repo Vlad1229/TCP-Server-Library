@@ -26,14 +26,14 @@ class TcpMsgDemarcar
 public:
     TcpMsgDemarcar();
 
-    bool ProcessMsg(std::shared_ptr<ByteCircularBuffer> bcb, const char* msg, uint16_t msg_size);
+    bool ProcessMsg(std::shared_ptr<ByteCircularBuffer>& bcb, const char* msg, uint16_t msg_size);
 
 protected:
-    virtual bool IsBufferReadyToFlush(std::shared_ptr<ByteCircularBuffer> bcb) const = 0;
-    virtual bool ReadMsg(std::shared_ptr<ByteCircularBuffer> bcb) = 0;
+    virtual bool IsBufferReadyToFlush(const std::shared_ptr<ByteCircularBuffer>& bcb) const = 0;
+    virtual bool ReadMsg(const std::shared_ptr<ByteCircularBuffer>& bcb) = 0;
 
 public:
-    std::function<void(const char*, uint16_t)> msg_demarked;
+    std::function<void(const char*, uint16_t)> on_msg_demarked;
 
 protected:
     char* buffer;

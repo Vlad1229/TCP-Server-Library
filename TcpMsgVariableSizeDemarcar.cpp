@@ -9,7 +9,7 @@ TcpMsgVariableSizeDemarcar::TcpMsgVariableSizeDemarcar(uint16_t header_size) : T
     this->msg_header_size = header_size;
 }
 
-bool TcpMsgVariableSizeDemarcar::IsBufferReadyToFlush(std::shared_ptr<ByteCircularBuffer> bcb) const
+bool TcpMsgVariableSizeDemarcar::IsBufferReadyToFlush(const std::shared_ptr<ByteCircularBuffer> &bcb) const
 {
     if (IsReadingMsg)
     {
@@ -21,7 +21,7 @@ bool TcpMsgVariableSizeDemarcar::IsBufferReadyToFlush(std::shared_ptr<ByteCircul
     }
 }
 
-bool TcpMsgVariableSizeDemarcar::ReadMsg(std::shared_ptr<ByteCircularBuffer> bcb)
+bool TcpMsgVariableSizeDemarcar::ReadMsg(const std::shared_ptr<ByteCircularBuffer> &bcb)
 {
     uint16_t bytes_read;
 
@@ -33,9 +33,9 @@ bool TcpMsgVariableSizeDemarcar::ReadMsg(std::shared_ptr<ByteCircularBuffer> bcb
             if (IsReadingMsg)
             {
                 IsReadingMsg = false;
-                if (msg_demarked)
+                if (on_msg_demarked)
                 {
-                    msg_demarked(buffer, bytes_read);
+                    on_msg_demarked(buffer, bytes_read);
                 }
             }
             else

@@ -22,9 +22,9 @@ public:
 	~TcpServerController();
 
 	void SetServerNotifCallbacks(
-		void (*client_connected)(const std::shared_ptr<TcpServerController>&, const std::shared_ptr<TcpClient>&),
-		void (*client_disconnected)(const std::shared_ptr<TcpServerController>&, const std::shared_ptr<TcpClient>&),
-		void (*client_msg_recvd)(const std::shared_ptr<TcpServerController>&, const std::shared_ptr<TcpClient>&, const std::string&)
+		void (*on_client_connected)(const std::shared_ptr<TcpServerController>&, const std::shared_ptr<TcpClient>&),
+		void (*on_client_disconnected)(const std::shared_ptr<TcpServerController>&, const std::shared_ptr<TcpClient>&),
+		void (*on_client_msg_recvd)(const std::shared_ptr<TcpServerController>&, const std::shared_ptr<TcpClient>&, const std::string&)
 	);
 
 	void Start();
@@ -43,8 +43,8 @@ public:
 
 private:
 	void OnClientConnected(uint32_t ip_addr, uint16_t port_no, int comm_fd);
-	void OnClientDisconnected(std::shared_ptr<TcpClient>& client);
-	void OnClientMessageReceived(const std::shared_ptr<TcpClient>& client, const std::string& msg);
+	void OnClientDisconnected(std::shared_ptr<TcpClient>& tcp_client);
+	void OnClientMessageReceived(const std::shared_ptr<TcpClient>& tcp_client, const std::string& msg);
 
 public:
 	uint32_t ip_addr;
@@ -52,9 +52,9 @@ public:
 	std::string name;
 	uint8_t state_flags;
 
-	void (*client_connected)(const std::shared_ptr<TcpServerController>&, const std::shared_ptr<TcpClient>&);
-	void (*client_disconnected)(const std::shared_ptr<TcpServerController>&, const std::shared_ptr<TcpClient>&);
-	void (*client_msg_recvd)(const std::shared_ptr<TcpServerController>&, const std::shared_ptr<TcpClient>&, const std::string&);
+	void (*on_client_connected)(const std::shared_ptr<TcpServerController>&, const std::shared_ptr<TcpClient>&);
+	void (*on_client_disconnected)(const std::shared_ptr<TcpServerController>&, const std::shared_ptr<TcpClient>&);
+	void (*on_client_msg_recvd)(const std::shared_ptr<TcpServerController>&, const std::shared_ptr<TcpClient>&, const std::string&);
 
 private:
 	std::unique_ptr<TcpNewConnectionAcceptor> tcp_new_conn_acc;

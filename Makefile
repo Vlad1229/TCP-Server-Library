@@ -12,7 +12,7 @@ testapp.exe:${OBJS} CommandParser/libcli.a
 	${CC} ${CFLAGS} ${OBJS} -o $@ ${LIBS}
 
 $(OBJDIR)/%.o: %.cpp | $(OBJDIR)
-	${CC} -c $< -o $@
+	${CC} ${CFLAGS} -c $< -o $@
 
 $(OBJDIR):
 	mkdir -p $(OBJDIR)

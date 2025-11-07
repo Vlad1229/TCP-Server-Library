@@ -13,7 +13,6 @@ std::shared_ptr<TcpClient> TcpClientDBManager::AddClient(uint32_t ip_addr, uint1
 	std::shared_ptr<TcpClient> tcp_client = std::make_shared<TcpClient>(ip_addr, port_no, comm_fd);
 	tcp_clients_db.push_back(tcp_client);
 	return tcp_client;
-
 }
 
 void TcpClientDBManager::RemoveClient(std::shared_ptr<TcpClient> tcp_client)

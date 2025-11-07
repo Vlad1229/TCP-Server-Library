@@ -42,8 +42,6 @@ TcpClient::TcpClient(uint32_t ip_addr, uint16_t port_no, int comm_fd)
 		printf("Setsockopt TCP_KEEPCNT failed, error =  %d\n", errno);
 		exit(0);
 	}
-
-	circular_buffer = std::make_unique<ByteCircularBuffer>();
 }
 
 TcpClient::~TcpClient()
@@ -73,39 +71,4 @@ std::string TcpClient::ToString()
 		 << " [" << network_convert_ip_n_to_p(htonl(ip_addr)) 
 		 << ", " << htons(port_no) << "]";
 	return strm.str();
-}
-
-void TcpClient::SetDemarcar(const std::shared_ptr<TcpMsgDemarcar> &demarcar)
-{
-	this->demarcar = demarcar;
-}
-
-bool TcpClient::ProcessMessage(const char* msg, uint16_t msg_size)
-{
-	if (auto demarcar_locked = demarcar.lock())
-	{
-		demarcar_locked->msg_demarked = std::bind(&TcpClient::OnMsgDemarced, shared_from_this(), std::placeholders::_1, std::placeholders::_2);
-		bool result = demarcar_locked->ProcessMsg(circular_buffer, msg, msg_size);
-		demarcar_locked->msg_demarked = nullptr;
-
-		return result;
-	}
-	else if (msg_rcvd)
-	{
-		msg_rcvd(shared_from_this(), std::string(msg, msg_size));
-	}
-	return true;
-}
-
-void TcpClient::SetMessageReceivedCallback(std::function<void(const std::shared_ptr<TcpClient>& client, const std::string&)> msg_rcvd)
-{
-	this->msg_rcvd = msg_rcvd;
-}
-
-void TcpClient::OnMsgDemarced(const char* msg, uint16_t msg_size)
-{
-	if (msg_rcvd)
-	{
-		msg_rcvd(shared_from_this(), std::string(msg, msg_size));
-	}
 }

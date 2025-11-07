@@ -11,8 +11,8 @@ public:
     TcpMsgFixedSizeDemarcar(uint16_t fixed_size);
 
 protected:
-    bool IsBufferReadyToFlush(std::shared_ptr<ByteCircularBuffer> bcb) const override;
-    bool ReadMsg(std::shared_ptr<ByteCircularBuffer> bcb) override;
+    bool IsBufferReadyToFlush(const std::shared_ptr<ByteCircularBuffer>& bcb) const override;
+    bool ReadMsg(const std::shared_ptr<ByteCircularBuffer>& bcb) override;
 
 private:
     uint16_t msg_fixed_size;

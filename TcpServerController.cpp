@@ -24,16 +24,17 @@ TcpServerController::TcpServerController(std::string ip_addr, uint16_t port_no, 
 }
 
 void TcpServerController::SetServerNotifCallbacks(
-	void(*client_connected)(const std::shared_ptr<TcpServerController>&, const std::shared_ptr<TcpClient>&),
-	void(*client_disconnected)(const std::shared_ptr<TcpServerController>&, const std::shared_ptr<TcpClient>&),
-	void(*client_msg_recvd)(const std::shared_ptr<TcpServerController>&, const std::shared_ptr<TcpClient>&, const std::string&))
+	void(*on_client_connected)(const std::shared_ptr<TcpServerController>&, const std::shared_ptr<TcpClient>&),
+	void(*on_client_disconnected)(const std::shared_ptr<TcpServerController>&, const std::shared_ptr<TcpClient>&),
+	void(*on_client_msg_recvd)(const std::shared_ptr<TcpServerController>&, const std::shared_ptr<TcpClient>&, const std::string&))
 {
-	this->client_connected = client_connected;
-	this->client_disconnected = client_disconnected;
-	this->client_msg_recvd = client_msg_recvd;
+	this->on_client_connected = on_client_connected;
+	this->on_client_disconnected = on_client_disconnected;
+	this->on_client_msg_recvd = on_client_msg_recvd;
 
-	tcp_new_conn_acc->client_connected = std::bind(&TcpServerController::OnClientConnected, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-	tcp_client_svc_mgr->client_diconnected = std::bind(&TcpServerController::OnClientDisconnected, this, std::placeholders::_1);
+	tcp_new_conn_acc->on_client_connected = std::bind(&TcpServerController::OnClientConnected, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+	tcp_client_svc_mgr->on_client_disconnected = std::bind(&TcpServerController::OnClientDisconnected, this, std::placeholders::_1);
+	tcp_client_svc_mgr->on_msg_rcvd = std::bind(&TcpServerController::OnClientMessageReceived, this, std::placeholders::_1, std::placeholders::_2);
 }
 
 void TcpServerController::Start()
@@ -43,7 +44,7 @@ void TcpServerController::Start()
 		tcp_new_conn_acc->StartTcpNewConnectionAcceptorThread(ip_addr, port_no);
 		UnSetBit(TCP_SERVER_NOT_ACCEPTING_NEW_CONNECTIONS);
 
-		tcp_client_svc_mgr->StartTcpClientServiceManagerThread();
+		tcp_client_svc_mgr->Start();
 		UnSetBit(TCP_SERVER_NOT_LISTENING_CLIENTS);
 
 		printf("Tcp Server is Up and Running [%s, %d]\nOk.\n",
@@ -81,6 +82,8 @@ void TcpServerController::Display()
 		return;
 	}
 
+	tcp_client_svc_mgr->Dispaly();
+	
 	printf("Flags: %s %s %s %s\n",
 		   IsBitSet(TCP_SERVER_INITIALIZED) ? "I" : "Not-I",
 		   IsBitSet(TCP_SERVER_RUNNING) ? "R" : "Not-R",
@@ -112,8 +115,7 @@ void TcpServerController::StartClientSvcMgr()
 {
 	if (IsBitSet(TCP_SERVER_NOT_LISTENING_CLIENTS))
 	{
-		tcp_client_svc_mgr->SetStartClients(tcp_client_db_mgr->GetClients());
-		tcp_client_svc_mgr->StartTcpClientServiceManagerThread();
+		tcp_client_svc_mgr->Start(tcp_client_db_mgr->GetClients());
 		UnSetBit(TCP_SERVER_NOT_LISTENING_CLIENTS);
 	}
 }
@@ -122,7 +124,7 @@ void TcpServerController::StopClientSvcMgr()
 {
 	if (!IsBitSet(TCP_SERVER_NOT_LISTENING_CLIENTS))
 	{
-		tcp_client_svc_mgr->StopTcpClientServiceManagerThread();
+		tcp_client_svc_mgr->Stop();
 		SetBit(TCP_SERVER_NOT_LISTENING_CLIENTS);
 	}
 }
@@ -145,22 +147,17 @@ bool TcpServerController::IsBitSet(uint8_t bit_value)
 void TcpServerController::OnClientConnected(uint32_t ip_addr, uint16_t port_no, int comm_fd)
 {
 	auto tcp_client = tcp_client_db_mgr->AddClient(ip_addr, port_no, comm_fd);
-
-	tcp_client->SetMessageReceivedCallback(
-		std::bind(&TcpServerController::OnClientMessageReceived, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
-
-	tcp_client_svc_mgr->ClientFDStartListen(tcp_client);
-
-	this->client_connected(shared_from_this(), tcp_client);
+	tcp_client_svc_mgr->StartListenTcpClient(tcp_client);
+	this->on_client_connected(shared_from_this(), tcp_client);
 }
 
-void TcpServerController::OnClientDisconnected(std::shared_ptr<TcpClient>& client)
+void TcpServerController::OnClientDisconnected(std::shared_ptr<TcpClient>& tcp_client)
 {
-	this->client_disconnected(shared_from_this(), client);
-	tcp_client_db_mgr->RemoveClient(client);
+	this->on_client_disconnected(shared_from_this(), tcp_client);
+	tcp_client_db_mgr->RemoveClient(tcp_client);
 }
 
-void TcpServerController::OnClientMessageReceived(const std::shared_ptr<TcpClient>& client, const std::string& msg)
+void TcpServerController::OnClientMessageReceived(const std::shared_ptr<TcpClient>& tcp_client, const std::string& msg)
 {
-	this->client_msg_recvd(shared_from_this(), client, msg);
+	this->on_client_msg_recvd(shared_from_this(), tcp_client, msg);
 }

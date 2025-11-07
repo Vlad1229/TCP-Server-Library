@@ -112,11 +112,11 @@ void TcpNewConnectionAcceptor::TcpListenForNewConnection(uint32_t ip_addr, uint1
 					continue;
 				}
 
-				if (client_connected)
+				if (on_client_connected)
 				{
-					client_connected(client_addr.sin_addr.s_addr, 
-									 client_addr.sin_port,
-									 comm_sock_fd);
+					on_client_connected(client_addr.sin_addr.s_addr, 
+									 	client_addr.sin_port,
+									 	comm_sock_fd);
 				}
 			}
 
